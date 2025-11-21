@@ -1,0 +1,1492 @@
+type: sections
+max_columns: 4
+title: Network
+path: network
+icon: mdi:ip-network
+sections:
+  - type: grid
+    cards:
+      - type: custom:simple-tabs
+        pre-load: true
+        active-background: var(--md-sys-color-tertiary)
+        active-text-color: var(--md-sys-color-on-tertiary)
+        tabs:
+          - title: UDM Pro
+            icon: mdi:router-network
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  show_state: false
+                  styles:
+                    card:
+                      - padding: 0
+                      - border-radius: 0
+                      - box-shadow: 1px
+                    grid:
+                      - grid-template-columns: 1fr auto auto
+                      - grid-template-areas: "\"left restart\""
+                      - align-items: center
+                      - column-gap: 8px
+                  custom_fields:
+                    left:
+                      card:
+                        type: custom:mushroom-template-card
+                        entity: sensor.yourunifientity_state
+                        primary: The Retreat UDMP
+                        secondary: >-
+                          🧮 CPU: {% set cpu =
+                          states('sensor.yourunifientity_cpu_utilization') |
+                          float(0) %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %}
+                          🟡 {% elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          cpu }}%
+
+                          📟 MEM: {% set mem =
+                          states('sensor.yourunifientity_memory_utilization') |
+                          float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75 %}
+                          🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          mem }}%
+
+                          🌡️ TEMP: {% set t =
+                          states('sensor.yourunifientity_cpu_temperature') |
+                          float(0) %} {% if t < 55 %} 🟢 {% elif t < 65 %} 🟡 {%
+                          elif t < 75 %} 🟠 {% else %} 🔴 {% endif %} {{ t }}°C
+
+                          ⏱️ Uptime: {{
+                          relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                          }} 
+
+                          🔄 Updates: {% if is_state('update.yourunifientity',
+                          'off') %} ✅ Up to date {% else %} 🔔 Update Available
+                          {% endif %}
+                        icon: mdi:router-network
+                        icon_color: >
+                          {% if is_state('sensor.yourunifientity_state',
+                          'connected') %}
+                            green
+                          {% else %}
+                            red
+                          {% endif %}
+                        fill_container: true
+                        multiline_secondary: true
+                        tap_action:
+                          action: navigate
+                          navigation_path: >-
+                            /config/devices/device/yourdeviceid
+                        card_mod:
+                          style: |
+                            ha-card {
+                              padding: 8px 12px !important;
+                              border: none !important;
+                              box-shadow: none !important;
+                            }
+                    restart:
+                      card:
+                        type: custom:mushroom-chips-card
+                        alignment: center
+                        chips:
+                          - type: action
+                            icon: mdi:restart
+                            icon_color: red
+                            tap_action:
+                              action: call-service
+                              service: button.press
+                              target:
+                                entity_id: button.yourunifientity_restart
+                        card_mod:
+                          style: |
+                            ha-card {
+                              background: transparent !important;
+                              box-shadow: none !important;
+                            }
+                - type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      variables:
+                        internet_state: sensor.internet_status
+                        download_state: sensor.fast_com_download
+                        upload_state: sensor.speedtest_upload
+                        ping_state: sensor.yourunifientity_cloudflare_wan_latency
+                        download_good_above: 250
+                        download_average_above: 200
+                        download_poor_below: 150
+                        upload_good_above: 50
+                        upload_average_above: 30
+                        upload_poor_below: 15
+                        ping_offline: 1
+                        ping_good_below: 25
+                        ping_average_below: 40
+                        ping_poor_above: 40
+                      triggers_update:
+                        - "[[[ return variables.internet_state ]]]"
+                        - "[[[ return variables.download_state ]]]"
+                        - "[[[ return variables.upload_state ]]]"
+                        - "[[[ return variables.ping_state ]]]"
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      styles:
+                        card:
+                          - padding: 10px
+                        grid:
+                          - grid-template-areas: "\"left mid right\""
+                          - grid-template-columns: .8fr .1fr .8fr
+                          - grid-template-rows: 100%
+                        custom_fields:
+                          left:
+                            - overflow: visible
+                            - filter: opacity(100%)
+                          right:
+                            - overflow: visible
+                            - filter: opacity(100%)
+                      custom_fields:
+                        left:
+                          card:
+                            type: custom:mushroom-template-card
+                            entity: "[[[ return variables.internet_state ]]]"
+                            primary: |
+                              {% if is_state(entity, "up") %}
+                                Online
+                              {% elif is_state(entity, "down") %}
+                                DOWN
+                              {% endif %}
+                            secondary: >
+                              Internet Status {{ '\n' }} WAN IP: {{
+                              states('sensor.udm_wan_ip') }}
+                            icon: |
+                              {% if is_state(entity, "up") %}
+                                mdi:web-check
+                              {% else %}
+                                mdi:web-cancel
+                              {% endif %}
+                            icon_color: |
+                              {% if is_state(entity, "up") %}
+                                green
+                              {% else %}
+                                red
+                              {% endif %}
+                            multiline_secondary: true
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  padding: 0 !important;
+                                  padding-bottom: 3px !important;
+                                  text-align: left !important;
+                                  border: none !important;
+                                  box-shadow: none !important;
+                                }
+                        right:
+                          card:
+                            type: grid
+                            columns: 3
+                            square: false
+                            cards:
+                              - type: custom:button-card
+                                entity: "[[[ return variables.download_state ]]]"
+                                layout: icon_state
+                                show_name: false
+                                show_state: true
+                                show_label: true
+                                icon: mdi:download-network-outline
+                                size: 50%
+                                label: Mbit/s
+                                state_display: >-
+                                  [[[ return
+                                  Math.round(Number(states[variables.download_state].state));
+                                  ]]]
+                                state:
+                                  - value: >-
+                                      [[[ return variables.download_good_above
+                                      ]]]
+                                    operator: ">"
+                                    styles:
+                                      icon:
+                                        - color: green
+                                      card:
+                                        - background-color: rgba(0, 128, 0, 0.10)
+                                  - value: >-
+                                      [[[ return
+                                      variables.download_average_above ]]]
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: darkorange
+                                      card:
+                                        - background-color: rgba(255, 165, 0, 0.10)
+                                  - value: >-
+                                      [[[ return variables.download_poor_below
+                                      ]]]
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: red
+                                      card:
+                                        - background-color: rgba(255, 0, 0, 0.10)
+                                styles:
+                                  state:
+                                    - font-size: 0.9rem
+                                    - font-weight: bold
+                                  label:
+                                    - font-size: 0.9rem
+                                  card:
+                                    - background: >-
+                                        rgba(var(--rgb-primary-text-color),
+                                        0.05)
+                                    - height: 3rem
+                                    - border: none
+                                    - box-shadow: none
+                              - type: custom:button-card
+                                entity: "[[[ return variables.upload_state ]]]"
+                                layout: icon_state
+                                show_state: true
+                                show_name: false
+                                show_label: true
+                                icon: mdi:upload-network-outline
+                                size: 50%
+                                label: Mbit/s
+                                state_display: >-
+                                  [[[ return
+                                  Math.round(Number(states[variables.upload_state].state));
+                                  ]]]
+                                state:
+                                  - value: "[[[ return variables.upload_good_above ]]]"
+                                    operator: ">"
+                                    styles:
+                                      icon:
+                                        - color: green
+                                      card:
+                                        - background-color: rgba(0, 128, 0, 0.10)
+                                  - value: >-
+                                      [[[ return variables.upload_average_above
+                                      ]]]
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: darkorange
+                                      card:
+                                        - background-color: rgba(255, 165, 0, 0.10)
+                                  - value: "[[[ return variables.upload_poor_below ]]]"
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: red
+                                      card:
+                                        - background-color: rgba(255, 0, 0, 0.10)
+                                styles:
+                                  state:
+                                    - font-size: 0.9rem
+                                    - font-weight: bold
+                                  label:
+                                    - font-size: 0.9rem
+                                  card:
+                                    - background: >-
+                                        rgba(var(--rgb-primary-text-color),
+                                        0.05)
+                                    - height: 3rem
+                                    - border: none
+                                    - box-shadow: none
+                              - type: custom:button-card
+                                entity: "[[[ return variables.ping_state ]]]"
+                                layout: icon_state
+                                show_state: true
+                                show_name: false
+                                show_label: true
+                                icon: mdi:clock-check-outline
+                                size: 50%
+                                label: ms
+                                state_display: >-
+                                  [[[ return
+                                  Math.round(Number(states[variables.ping_state].state));
+                                  ]]]
+                                state:
+                                  - value: "[[[ return variables.ping_offline ]]]"
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: grey
+                                  - value: "[[[ return variables.ping_good_below ]]]"
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: green
+                                      card:
+                                        - background-color: rgba(0, 128, 0, 0.10)
+                                  - value: >-
+                                      [[[ return variables.ping_average_below
+                                      ]]]
+                                    operator: <=
+                                    styles:
+                                      icon:
+                                        - color: darkorange
+                                      card:
+                                        - background-color: rgba(255, 165, 0, 0.10)
+                                  - value: "[[[ return variables.ping_poor_above ]]]"
+                                    operator: ">"
+                                    styles:
+                                      icon:
+                                        - color: red
+                                      card:
+                                        - background-color: rgba(255, 0, 0, 0.10)
+                                styles:
+                                  state:
+                                    - font-size: 0.9rem
+                                    - font-weight: bold
+                                  label:
+                                    - font-size: 0.9rem
+                                  card:
+                                    - background: >-
+                                        rgba(var(--rgb-primary-text-color),
+                                        0.05)
+                                    - height: 3rem
+                                    - border: none
+                                    - box-shadow: none
+                    - type: custom:button-card
+                      variables:
+                        lat_google: sensor.yourunifientity_google_wan_latency
+                        lat_ms: sensor.yourunifientity_microsoft_wan_latency
+                        lat_cf: sensor.yourunifientity_cloudflare_wan_latency
+                        good_below: 40
+                        warn_below: 80
+                        bad_above: 80
+                      triggers_update:
+                        - "[[[ return variables.lat_google ]]]"
+                        - "[[[ return variables.lat_ms ]]]"
+                        - "[[[ return variables.lat_cf ]]]"
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      styles:
+                        card:
+                          - padding: 10px
+                        grid:
+                          - grid-template-areas: "\"left mid right\""
+                          - grid-template-columns: .8fr .1fr .8fr
+                          - grid-template-rows: 100%
+                        custom_fields:
+                          left:
+                            - overflow: visible
+                            - filter: opacity(100%)
+                          right:
+                            - overflow: visible
+                            - filter: opacity(100%)
+                      custom_fields:
+                        left:
+                          card:
+                            type: custom:mushroom-template-card
+                            entity: sensor.latency_status
+                            primary: Latency
+                            secondary: "{{ states('sensor.latency_status') | title }}"
+                            icon: mdi:chart-timeline-variant
+                            icon_color: >
+                              {% if is_state('sensor.latency_status', 'poor') %}
+                                red
+                              {% elif is_state('sensor.latency_status',
+                              'degraded') %}
+                                orange
+                              {% else %}
+                                green
+                              {% endif %}
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  padding: 0 !important;
+                                  padding-bottom: 3px !important;
+                                  text-align: left !important;
+                                  border: none !important;
+                                  box-shadow: none !important;
+                                }
+                        right:
+                          card:
+                            type: grid
+                            columns: 3
+                            square: false
+                            cards:
+                              - type: custom:button-card
+                                entity: "[[[ return variables.lat_google ]]]"
+                                layout: icon_state
+                                show_name: false
+                                show_state: true
+                                show_label: true
+                                icon: mdi:google
+                                size: 50%
+                                label: ms
+                                state_display: |-
+                                  [[[ 
+                                    return Math.round(Number(states[variables.lat_google].state));
+                                  ]]]
+                                state:
+                                  - value: "[[[ return variables.good_below ]]]"
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: green
+                                      card:
+                                        - background-color: rgba(0, 128, 0, 0.10)
+                                  - value: "[[[ return variables.warn_below ]]]"
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: darkorange
+                                      card:
+                                        - background-color: rgba(255, 165, 0, 0.10)
+                                  - value: "[[[ return variables.bad_above ]]]"
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: red
+                                      card:
+                                        - background-color: rgba(255, 0, 0, 0.10)
+                                styles:
+                                  state:
+                                    - font-size: 0.9rem
+                                    - font-weight: bold
+                                  label:
+                                    - font-size: 0.9rem
+                                  card:
+                                    - background: >-
+                                        rgba(var(--rgb-primary-text-color),
+                                        0.05)
+                                    - height: 3rem
+                                    - border: none
+                                    - box-shadow: none
+                              - type: custom:button-card
+                                entity: "[[[ return variables.lat_ms ]]]"
+                                layout: icon_state
+                                show_name: false
+                                show_state: true
+                                show_label: true
+                                icon: mdi:microsoft
+                                size: 50%
+                                label: ms
+                                state_display: |-
+                                  [[[ 
+                                    return Math.round(Number(states[variables.lat_ms].state));
+                                  ]]]
+                                state:
+                                  - value: "[[[ return variables.good_below ]]]"
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: green
+                                      card:
+                                        - background-color: rgba(0, 128, 0, 0.10)
+                                  - value: "[[[ return variables.warn_below ]]]"
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: darkorange
+                                      card:
+                                        - background-color: rgba(255, 165, 0, 0.10)
+                                  - value: "[[[ return variables.bad_above ]]]"
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: red
+                                      card:
+                                        - background-color: rgba(255, 0, 0, 0.10)
+                                styles:
+                                  state:
+                                    - font-size: 0.9rem
+                                    - font-weight: bold
+                                  label:
+                                    - font-size: 0.9rem
+                                  card:
+                                    - background: >-
+                                        rgba(var(--rgb-primary-text-color),
+                                        0.05)
+                                    - height: 3rem
+                                    - border: none
+                                    - box-shadow: none
+                              - type: custom:button-card
+                                entity: "[[[ return variables.lat_cf ]]]"
+                                layout: icon_state
+                                show_name: false
+                                show_state: true
+                                show_label: true
+                                icon: mdi:cloud
+                                size: 50%
+                                label: ms
+                                state_display: |-
+                                  [[[ 
+                                    return Math.round(Number(states[variables.lat_cf].state));
+                                  ]]]
+                                state:
+                                  - value: "[[[ return variables.good_below ]]]"
+                                    operator: <
+                                    styles:
+                                      icon:
+                                        - color: green
+                                      card:
+                                        - background-color: rgba(0, 128, 0, 0.10)
+                                  - value: "[[[ return variables.warn_below ]]]"
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: darkorange
+                                      card:
+                                        - background-color: rgba(255, 165, 0, 0.10)
+                                  - value: "[[[ return variables.bad_above ]]]"
+                                    operator: ">="
+                                    styles:
+                                      icon:
+                                        - color: red
+                                      card:
+                                        - background-color: rgba(255, 0, 0, 0.10)
+                                styles:
+                                  state:
+                                    - font-size: 0.9rem
+                                    - font-weight: bold
+                                  label:
+                                    - font-size: 0.9rem
+                                  card:
+                                    - background: >-
+                                        rgba(var(--rgb-primary-text-color),
+                                        0.05)
+                                    - height: 3rem
+                                    - border: none
+                                    - box-shadow: none
+          - title: Switches
+            icon: mdi:switch
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  show_state: false
+                  styles:
+                    card:
+                      - padding: 0
+                      - border-radius: 0
+                      - box-shadow: 1px
+                    grid:
+                      - grid-template-columns: 1fr auto auto
+                      - grid-template-areas: "\"left restart\""
+                      - align-items: center
+                      - column-gap: 8px
+                  custom_fields:
+                    left:
+                      card:
+                        type: custom:mushroom-template-card
+                        primary: HD 24 PoE
+                        secondary: >-
+                          🧮 CPU: {% set cpu =
+                          states('sensor.yourunifientity_cpu_utilization') |
+                          float(0) %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %}
+                          🟡 {% elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          cpu }}%
+
+                          📟 MEM: {% set mem =
+                          states('sensor.yourunifientity_memory_utilization')
+                          | float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75 %}
+                          🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          mem }}%
+
+                          🌡️ TEMP: {% set t =
+                          states('sensor.yourunifientity_temperature') |
+                          float(0) %} {% if t < 55 %} 🟢 {% elif t < 65 %} 🟡 {%
+                          elif t < 75 %} 🟠 {% else %} 🔴 {% endif %} {{ t }}°C
+
+                          ⏱️ Uptime: {{
+                          relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                          }}
+
+                          🔄 Updates: {% if is_state('update.yourunifientity',
+                          'off') %} ✅ Up to date {% else %} 🔔 Update Available
+                          {% endif %}
+
+                          🔌 PoE Consumption:
+                          {{states('sensor.yourunifientity_total_poe')}}W
+                        icon: mdi:network
+                        icon_color: >
+                          {% if is_state('sensor.yourunifientity_state',
+                          'connected') %}
+                            green
+                          {% else %}
+                            red
+                          {% endif %}
+                        fill_container: true
+                        multiline_secondary: true
+                        tap_action:
+                          action: navigate
+                          navigation_path: >-
+                            /config/devices/device/yourdeviceid
+                        card_mod:
+                          style: |
+                            ha-card {
+                              padding: 8px 12px !important;
+                              border: none !important;
+                              box-shadow: none !important;
+                            }  
+                    restart:
+                      card:
+                        type: custom:mushroom-chips-card
+                        chips:
+                          - type: action
+                            icon: mdi:restart
+                            icon_color: red
+                            tap_action:
+                              action: call-service
+                              service: button.press
+                              data: {}
+                              target:
+                                entity_id: button.yourunifientity_restart
+                        card_mod:
+                          style: |
+                            ha-card {
+                              background: transparent !important;
+                              box-shadow: none !important;
+                            }                                
+                - type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  show_state: false
+                  styles:
+                    card:
+                      - padding: 0
+                      - border-radius: 0
+                      - box-shadow: 1px
+                    grid:
+                      - grid-template-columns: 1fr auto auto
+                      - grid-template-areas: "\"left restart\""
+                      - align-items: center
+                      - column-gap: 8px
+                  custom_fields:
+                    left:
+                      card:
+                        type: custom:mushroom-template-card
+                        primary: LR 2.5-8-PoE
+                        secondary: >-
+                          🧮 CPU: {% set cpu =
+                          states('sensor.yourunifientity_cpu_utilization') |
+                          float(0) %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %}
+                          🟡 {% elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          cpu }}%
+
+                          📟 MEM: {% set mem =
+                          states('sensor.yourunifientity_memory_utilization')
+                          | float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75 %}
+                          🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          mem }}%
+
+                          ⏱️ Uptime: {{
+                          relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                          }}
+
+                          🔄 Updates: {% if
+                          is_state('update.yourunifientity', 'off') %} ✅ Up
+                          to date {% else %} 🔔 Update Available {% endif %}
+
+                          🔌 PoE Consumption:
+                          {{states('sensor.yourunifientity_total_poe')}}W
+                        icon: mdi:network
+                        icon_color: >
+                          {% if is_state('sensor.yourunifientity_state',
+                          'connected') %}
+                            green
+                          {% else %}
+                            red
+                          {% endif %}
+                        fill_container: true
+                        multiline_secondary: true
+                        tap_action:
+                          action: navigate
+                          navigation_path: >-
+                            /config/devices/device/yourdeviceid
+                        card_mod:
+                          style: |
+                            ha-card {
+                              padding: 8px 12px !important;
+                              border: none !important;
+                              box-shadow: none !important;
+                            }      
+                    restart:
+                      card:
+                        type: custom:mushroom-chips-card
+                        chips:
+                          - type: action
+                            icon: mdi:restart
+                            icon_color: red
+                            tap_action:
+                              action: call-service
+                              service: button.press
+                              data: {}
+                              target:
+                                entity_id: button.yourunifientity_poe_restart
+                      card_mod:
+                        style: |
+                          ha-card {
+                            background: transparent !important;
+                            box-shadow: none !important;
+                          }
+                - type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  show_state: false
+                  styles:
+                    card:
+                      - padding: 0
+                      - border-radius: 0
+                      - box-shadow: 1px
+                    grid:
+                      - grid-template-columns: 1fr auto auto
+                      - grid-template-areas: "\"left restart\""
+                      - align-items: center
+                      - column-gap: 8px
+                  custom_fields:
+                    left:
+                      card:
+                        type: custom:mushroom-template-card
+                        primary: Office 2.5 Flex
+                        secondary: >-
+                          🧮 CPU: {% set cpu =
+                          states('sensor.yourunifientity_cpu_utilization') |
+                          float(0) %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %}
+                          🟡 {% elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          cpu }}%
+
+                          📟 MEM: {% set mem =
+                          states('sensor.uyourunifientity_memory_utilization') |
+                          float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75 %}
+                          🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          mem }}%
+
+                          ⏱️ Uptime: {{
+                          relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                          }}
+
+                          🔄 Updates: {% if is_state('update.yourunifientity',
+                          'off') %} ✅ Up to date {% else %} 🔔 Update Available
+                          {% endif %}
+                        icon: mdi:network
+                        icon_color: >
+                          {% if is_state('sensor.yourunifientity_state',
+                          'connected') %}
+                            green
+                          {% else %}
+                            red
+                          {% endif %}
+                        fill_container: true
+                        multiline_secondary: true
+                        tap_action:
+                          action: navigate
+                          navigation_path: >-
+                            /config/devices/device/yourdeviceid
+                        card_mod:
+                          style: |
+                            ha-card {
+                              padding: 8px 12px !important;
+                              border: none !important;
+                              box-shadow: none !important;
+                            }   
+                    restart:
+                      card:
+                        type: custom:mushroom-chips-card
+                        chips:
+                          - type: action
+                            icon: mdi:restart
+                            icon_color: red
+                            tap_action:
+                              action: call-service
+                              service: button.press
+                              data: {}
+                              target:
+                                entity_id: button.yourunifientity_restart
+                        card_mod:
+                          style: |
+                            ha-card {
+                              background: transparent !important;
+                              box-shadow: none !important;
+                            }
+                - type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  show_state: false
+                  styles:
+                    card:
+                      - padding: 0
+                      - border-radius: 0
+                      - box-shadow: 1px
+                    grid:
+                      - grid-template-columns: 1fr auto auto
+                      - grid-template-areas: "\"left restart\""
+                      - align-items: center
+                      - column-gap: 8px
+                  custom_fields:
+                    left:
+                      card:
+                        type: custom:mushroom-template-card
+                        primary: Garage 8-150-PoE
+                        secondary: >-
+                          🧮 CPU: {% set cpu =
+                          states('sensor.yourunifientity_cpu_utilization') |
+                          float(0) %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %}
+                          🟡 {% elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          cpu }}%
+
+                          📟 MEM: {% set mem =
+                          states('sensor.yourunifientity_memory_utilization') |
+                          float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75 %}
+                          🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                          mem }}%
+
+                          ⏱️ Uptime: {{
+                          relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                          }}
+
+                          🔄 Updates: {% if is_state('update.yourunifientity',
+                          'off') %} ✅ Up to date {% else %} 🔔 Update Available
+                          {% endif %}
+
+                          🔌 PoE Consumption:
+                          {{states('sensor.yourunifientity_total_poe')}}W
+                        icon: mdi:network
+                        icon_color: >
+                          {% if is_state('sensor.yourunifientity_state',
+                          'connected') %}
+                            green
+                          {% else %}
+                            red
+                          {% endif %}
+                        fill_container: true
+                        multiline_secondary: true
+                        tap_action:
+                          action: navigate
+                          navigation_path: >-
+                            /config/devices/device/yourdeviceid
+                        card_mod:
+                          style: |
+                            ha-card {
+                              padding: 8px 12px !important;
+                              border: none !important;
+                              box-shadow: none !important;
+                            }   
+                    restart:
+                      card:
+                        type: custom:mushroom-chips-card
+                        chips:
+                          - type: action
+                            icon: mdi:restart
+                            icon_color: red
+                            tap_action:
+                              action: call-service
+                              service: button.press
+                              data: {}
+                              target:
+                                entity_id: button.yourunifientity_restart
+                        card_mod:
+                          style: |
+                            ha-card {
+                              background: transparent !important;
+                              box-shadow: none !important;
+                            }
+                - type: custom:gap-card
+                  height: 15
+          - title: Access Points
+            icon: mdi:access-point-network
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:gap-card
+                  height: 5
+                - type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      styles:
+                        card:
+                          - padding: 0
+                          - border-radius: 0
+                          - box-shadow: 1px
+                        grid:
+                          - grid-template-columns: 1fr auto auto
+                          - grid-template-areas: "\"left gauge restart\""
+                          - align-items: center
+                          - column-gap: 8px
+                      custom_fields:
+                        left:
+                          card:
+                            type: custom:mushroom-template-card
+                            entity: sensor.yourunifientity_state
+                            primary: U7 Pro Wall
+                            secondary: >-
+                              🧮 CPU: {% set cpu =
+                              states('sensor.yourunifientity_cpu_utilization') |
+                              float(0) %} {% if cpu < 60 %} 🟢 {% elif cpu < 75
+                              %} 🟡 {% elif cpu < 90 %} 🟠 {% else %} 🔴 {%
+                              endif %} {{ cpu }}% 
+
+                              📟 MEM: {% set mem =
+                              states('sensor.yourunifientity_memory_utilization') |
+                              float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75
+                              %} 🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {%
+                              endif %} {{ mem }}% 
+
+                              ⏱️ Uptime: {{
+                              relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                              }} 
+
+                              🔄 Updates: {% if is_state('update.yourunifientity',
+                              'off') %} Up to date ✅ {% else %} 🔔 Update
+                              Available {% endif %}
+                            icon: mdi:access-point-network
+                            icon_color: >
+                              {% if
+                              is_state('sensor.yourunifientity_state','connected')
+                              %}
+                                green
+                              {% else %}
+                                red
+                              {% endif %}
+                            multiline_secondary: true
+                            fill_container: true
+                            tap_action:
+                              action: navigate
+                              navigation_path: >-
+                                /config/devices/device/yourdeviceid
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  padding: 8px 12px !important;
+                                  border: none !important;
+                                  box-shadow: none !important;
+                                }
+                        gauge:
+                          card:
+                            type: custom:badge-horizontal-container-card
+                            style: |
+                              ha-card {
+                                background: transparent !important;
+                                box-shadow: none !important;
+                                padding: 0 !important;
+                                margin: 0 !important;
+                              }
+                            badges:
+                              - type: custom:modern-circular-gauge-badge
+                                entity: sensor.yourunifientity_clients
+                                max: 100
+                                size: 32
+                                show_seconds: false
+                                segments:
+                                  - from: 0
+                                    color:
+                                      - 0
+                                      - 180
+                                      - 0
+                                  - from: 10
+                                    color:
+                                      - 80
+                                      - 200
+                                      - 0
+                                  - from: 20
+                                    color:
+                                      - 200
+                                      - 200
+                                      - 0
+                                  - from: 30
+                                    color:
+                                      - 255
+                                      - 165
+                                      - 0
+                                  - from: 40
+                                    color:
+                                      - 255
+                                      - 80
+                                      - 0
+                                  - from: 50
+                                    color:
+                                      - 255
+                                      - 0
+                                      - 0
+                        restart:
+                          card:
+                            type: custom:mushroom-chips-card
+                            alignment: center
+                            chips:
+                              - type: action
+                                icon: mdi:restart
+                                icon_color: red
+                                tap_action:
+                                  action: call-service
+                                  service: button.press
+                                  target:
+                                    entity_id: button.yourunifientity_restart
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  background: transparent !important;
+                                  box-shadow: none !important;
+                                }
+                    - type: custom:button-card
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      styles:
+                        card:
+                          - padding: 0
+                          - border-radius: 0
+                          - box-shadow: 1px
+                        grid:
+                          - grid-template-columns: 1fr auto auto
+                          - grid-template-areas: "\"left gauge restart\""
+                          - align-items: center
+                          - column-gap: 8px
+                      custom_fields:
+                        left:
+                          card:
+                            type: custom:mushroom-template-card
+                            entity: sensor.u7_pro_state
+                            primary: U7 Pro
+                            secondary: >-
+                              🧮 CPU: {% set cpu =
+                              states('sensor.yourunifientity_cpu_utilization') | float(0)
+                              %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %} 🟡 {%
+                              elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                              cpu }}% 
+
+                              📟 MEM: {% set mem =
+                              states('sensor.yourunifientity_memory_utilization') |
+                              float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75
+                              %} 🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {%
+                              endif %} {{ mem }}% 
+
+                              ⏱️ Uptime: {{
+                              relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                              }} 
+
+                              🔄 Updates: {% if is_state('update.yourunifientity', 'off')
+                              %} Up to date ✅ {% else %} 🔔 Update Available {%
+                              endif %}
+                            icon: mdi:access-point-network
+                            icon_color: >
+                              {% if is_state('sensor.yourunifientity_state','connected')
+                              %}
+                                green
+                              {% else %}
+                                red
+                              {% endif %}
+                            multiline_secondary: true
+                            fill_container: true
+                            tap_action:
+                              action: navigate
+                              navigation_path: >-
+                                /config/devices/device/yourdeviceid
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  padding: 8px 12px !important;
+                                  border: none !important;
+                                  box-shadow: none !important;
+                                }
+                        gauge:
+                          card:
+                            type: custom:badge-horizontal-container-card
+                            style: |
+                              ha-card {
+                                background: transparent !important;
+                                box-shadow: none !important;
+                                padding: 0 !important;
+                                margin: 0 !important;
+                              }
+                            badges:
+                              - type: custom:modern-circular-gauge-badge
+                                entity: sensor.yourunifientity_clients
+                                max: 100
+                                size: 32
+                                show_seconds: false
+                                segments:
+                                  - from: 0
+                                    color:
+                                      - 0
+                                      - 180
+                                      - 0
+                                  - from: 10
+                                    color:
+                                      - 80
+                                      - 200
+                                      - 0
+                                  - from: 20
+                                    color:
+                                      - 200
+                                      - 200
+                                      - 0
+                                  - from: 30
+                                    color:
+                                      - 255
+                                      - 165
+                                      - 0
+                                  - from: 40
+                                    color:
+                                      - 255
+                                      - 80
+                                      - 0
+                                  - from: 50
+                                    color:
+                                      - 255
+                                      - 0
+                                      - 0
+                        restart:
+                          card:
+                            type: custom:mushroom-chips-card
+                            alignment: center
+                            chips:
+                              - type: action
+                                icon: mdi:restart
+                                icon_color: red
+                                tap_action:
+                                  action: call-service
+                                  service: button.press
+                                  target:
+                                    entity_id: button.yourunifientity_restart
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  background: transparent !important;
+                                  box-shadow: none !important;
+                                }
+                    - type: custom:button-card
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      styles:
+                        card:
+                          - padding: 0
+                          - border-radius: 0
+                          - box-shadow: 1px
+                        grid:
+                          - grid-template-columns: 1fr auto auto
+                          - grid-template-areas: "\"left gauge restart\""
+                          - align-items: center
+                          - column-gap: 8px
+                      custom_fields:
+                        left:
+                          card:
+                            type: custom:mushroom-template-card
+                            entity: sensor.yourunifientity_state
+                            primary: U6 Pro
+                            secondary: >-
+                              🧮 CPU: {% set cpu =
+                              states('sensor.yourunifientity_cpu_utilization') | float(0)
+                              %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %} 🟡 {%
+                              elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                              cpu }}% 
+
+                              📟 MEM: {% set mem =
+                              states('sensor.yourunifientity_memory_utilization') |
+                              float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75
+                              %} 🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {%
+                              endif %} {{ mem }}% 
+
+                              ⏱️ Uptime: {{
+                              relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                              }} 
+
+                              🔄 Updates: {% if is_state('update.yourunifientity',
+                              'off') %} Up to date ✅ {% else %} 🔔 Update
+                              Available {% endif %}
+                            icon: mdi:access-point-network
+                            icon_color: >
+                              {% if is_state('sensor.yourunifientity_state','connected')
+                              %}
+                                green
+                              {% else %}
+                                red
+                              {% endif %}
+                            multiline_secondary: true
+                            fill_container: true
+                            tap_action:
+                              action: navigate
+                              navigation_path: >-
+                                /config/devices/device/yourdeviceid
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  padding: 8px 12px !important;
+                                  border: none !important;
+                                  box-shadow: none !important;
+                                }
+                        gauge:
+                          card:
+                            type: custom:badge-horizontal-container-card
+                            style: |
+                              ha-card {
+                                background: transparent !important;
+                                box-shadow: none !important;
+                                padding: 0 !important;
+                                margin: 0 !important;
+                              }
+                            badges:
+                              - type: custom:modern-circular-gauge-badge
+                                entity: sensor.u6_pro_clients
+                                max: 100
+                                size: 32
+                                show_seconds: false
+                                segments:
+                                  - from: 0
+                                    color:
+                                      - 0
+                                      - 180
+                                      - 0
+                                  - from: 10
+                                    color:
+                                      - 80
+                                      - 200
+                                      - 0
+                                  - from: 20
+                                    color:
+                                      - 200
+                                      - 200
+                                      - 0
+                                  - from: 30
+                                    color:
+                                      - 255
+                                      - 165
+                                      - 0
+                                  - from: 40
+                                    color:
+                                      - 255
+                                      - 80
+                                      - 0
+                                  - from: 50
+                                    color:
+                                      - 255
+                                      - 0
+                                      - 0
+                        restart:
+                          card:
+                            type: custom:mushroom-chips-card
+                            alignment: center
+                            chips:
+                              - type: action
+                                icon: mdi:restart
+                                icon_color: red
+                                tap_action:
+                                  action: call-service
+                                  service: button.press
+                                  target:
+                                    entity_id: button.yourunifientity_restart
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  background: transparent !important;
+                                  box-shadow: none !important;
+                                }
+                    - type: custom:button-card
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      styles:
+                        card:
+                          - padding: 0
+                          - border-radius: 0
+                          - box-shadow: 1px
+                        grid:
+                          - grid-template-columns: 1fr auto auto
+                          - grid-template-areas: "\"left gauge restart\""
+                          - align-items: center
+                          - column-gap: 8px
+                      custom_fields:
+                        left:
+                          card:
+                            type: custom:mushroom-template-card
+                            entity: sensor.yourunifientity_state
+                            primary: AC Pro
+                            secondary: >-
+                              🧮 CPU: {% set cpu =
+                              states('sensor.yourunifientity_cpu_utilization') | float(0)
+                              %} {% if cpu < 60 %} 🟢 {% elif cpu < 75 %} 🟡 {%
+                              elif cpu < 90 %} 🟠 {% else %} 🔴 {% endif %} {{
+                              cpu }}% 
+
+                              📟 MEM: {% set mem =
+                              states('sensor.yourunifientity_memory_utilization') |
+                              float(0) %} {% if mem < 60 %} 🟢 {% elif mem < 75
+                              %} 🟡 {% elif mem < 90 %} 🟠 {% else %} 🔴 {%
+                              endif %} {{ mem }}% 
+
+                              ⏱️ Uptime: {{
+                              relative_time(as_datetime(states('sensor.yourunifientity_uptime')))
+                              }} 
+
+                              🔄 Updates: {% if is_state('update.yourunifientity', 'off')
+                              %} Up to date ✅ {% else %} 🔔 Update Available {%
+                              endif %}
+                            icon: mdi:access-point-network
+                            icon_color: >
+                              {% if is_state('sensor.yourunifientity_state','connected')
+                              %}
+                                green
+                              {% else %}
+                                red
+                              {% endif %}
+                            multiline_secondary: true
+                            fill_container: true
+                            tap_action:
+                              action: navigate
+                              navigation_path: >-
+                                /config/devices/device/yourdeviceid
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  padding: 8px 12px !important;
+                                  border: none !important;
+                                  box-shadow: none !important;
+                                }
+                        gauge:
+                          card:
+                            type: custom:badge-horizontal-container-card
+                            style: |
+                              ha-card {
+                                background: transparent !important;
+                                box-shadow: none !important;
+                                padding: 0 !important;
+                                margin: 0 !important;
+                              }
+                            badges:
+                              - type: custom:modern-circular-gauge-badge
+                                entity: sensor.yourunifientity_clients
+                                max: 100
+                                size: 32
+                                show_seconds: false
+                                segments:
+                                  - from: 0
+                                    color:
+                                      - 0
+                                      - 180
+                                      - 0
+                                  - from: 10
+                                    color:
+                                      - 80
+                                      - 200
+                                      - 0
+                                  - from: 20
+                                    color:
+                                      - 200
+                                      - 200
+                                      - 0
+                                  - from: 30
+                                    color:
+                                      - 255
+                                      - 165
+                                      - 0
+                                  - from: 40
+                                    color:
+                                      - 255
+                                      - 80
+                                      - 0
+                                  - from: 50
+                                    color:
+                                      - 255
+                                      - 0
+                                      - 0
+                        restart:
+                          card:
+                            type: custom:mushroom-chips-card
+                            alignment: center
+                            chips:
+                              - type: action
+                                icon: mdi:restart
+                                icon_color: red
+                                tap_action:
+                                  action: call-service
+                                  service: button.press
+                                  target:
+                                    entity_id: button.ac_pro_restart
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  background: transparent !important;
+                                  box-shadow: none !important;
+                                }
+header:
+  card:
+    type: vertical-stack
+    cards:
+      - type: custom:decluttering-card
+        template: mushroom_room_title_card
+        variables:
+          - title: 🛜 Network
+      - type: custom:mushroom-template-card
+        primary: []
+        secondary: >-
+          📉 Speed Down: {{ states('sensor.fast_com_download') | round (2)}}
+          Mbit/s
+
+          📈 Speed Up: {{ states('sensor.speedtest_upload') }} Mbit/s
+
+          📊 Latency: {{ states('sensor.yourunifientity_cloudflare_wan_latency')
+          }} ms
+
+          ⬇️ Downloaded: {{ (states('sensor.wan_download_today') | float / 1024
+          / 1024 / 1024) | round(2) }} GB
+
+          ⬆️ Uploaded: {{ (states('sensor.wan_upload_today') | float / 1024 /
+          1024 / 1024) | round(2) }} GB
+        icon: mdi:network-outline
+        icon_color: |
+          {% if is_state('sensor.internet_status', 'up') %}
+            green
+          {% else %}
+            red
+          {% endif %}
+        fill_container: true
+        multiline_secondary: true
+        card_mod:
+          style: |
+            /* Primary text (title) */
+            ha-tile-info span[slot="primary"] {
+              font-size: 1.2rem !important;
+              font-weight: 600 !important;
+              line-height: 1.25 !important;
+            }
+
+            /* Secondary text (multi-line stats) */
+            ha-tile-info span[slot="secondary"] {
+              font-size: 1.10rem !important;
+              line-height: 1.3 !important;
+            }
+  layout: responsive
+  badges_position: top
+  badges_wrap: wrap
+badges:
+  - type: custom:mushroom-chips-card
+    chips:
+      - type: template
+        tap_action:
+          action: navigate
+          navigation_path: /mobile-dashboard/rooms
+        icon: m3of:arrow-left-alt
+        card_mod:
+          style:
+            .: |
+              ha-card {
+                --color: var(--md-sys-color-on-primary);
+                --chip-background: var(--md-sys-color-primary);
+                margin-top: 0.7em;
+              }
+      - type: template
+        tap_action:
+          action: navigate
+          navigation_path: /mobile-dashboard/overview
+        icon: m3of:home
+        card_mod:
+          style:
+            .: |
+              ha-card {
+                --color: var(--md-sys-color-on-primary);
+                --chip-background: var(--md-sys-color-primary);
+                margin-top: 0.7em;
+              }
+cards: []
+subview: true
+background:
+  opacity: 90
+  alignment: center
+  size: cover
+  repeat: repeat
+  attachment: fixed
+  image: null

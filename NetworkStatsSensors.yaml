@@ -1,0 +1,193 @@
+sensor:
+  ###
+  # Unifi stats I use for total bytes down / up (but it gets other stuff you might find useful)
+  ###
+  - platform: rest
+    name: udm_wan_raw
+    resource: https://yourudmip/proxy/network/api/s/default/stat/device
+    headers:
+      X-API-KEY: "yourapikey"
+      Accept: application/json
+    verify_ssl: false
+    scan_interval: 60
+    timeout: 10
+    value_template: "OK"
+    json_attributes_path: "$.data[?(@.model=='UDMPRO')]"
+    json_attributes:
+      - port_table
+
+utility_meter:
+  ###
+  # Unifi stats
+  ###
+  wan_download_today:
+    source: sensor.wan_download_bytes
+    cycle: daily
+
+  wan_upload_today:
+    source: sensor.wan_upload_bytes
+    cycle: daily
+
+template:
+  ###
+  # Unifi stats
+  ###
+  - sensor:
+      - name: "WAN Download Bytes"
+        unit_of_measurement: "bytes"
+        state_class: total_increasing
+        device_class: data_size
+        state: >
+          {% set ports = state_attr('sensor.udm_wan_raw', 'port_table') %}
+          {% if ports %}
+            {{ ports | selectattr('port_idx', 'eq', yourportnumber) | map(attribute='rx_bytes') | first }}
+            # {{ ports | selectattr('port_idx', 'eq', 6) | map(attribute='rx_bytes') | first }}  <------remove this line after finding your appropriate port number
+          {% else %} 0 {% endif %}
+
+      - name: "WAN Upload Bytes"
+        unit_of_measurement: "bytes"
+        state_class: total_increasing
+        device_class: data_size
+        state: >
+          {% set ports = state_attr('sensor.udm_wan_raw', 'port_table') %}
+          {% if ports %}
+            {{ ports | selectattr('port_idx', 'eq', yourportnumber) | map(attribute='tx_bytes') | first }}
+            # {{ ports | selectattr('port_idx', 'eq', 6) | map(attribute='tx_bytes') | first }}  <------remove this line after finding your appropriate port number
+          {% else %} 0 {% endif %} 
+  
+  # WAN IP
+  - sensor:
+      - name: "UDM WAN IP"
+        icon: mdi:wan
+        state: >
+          {% set p = state_attr('sensor.udm_wan_raw','port_table') %}
+          {% if p %}
+            {{ p | selectattr('port_idx','eq',yourportnumber) | map(attribute='ip') | first }}
+            #{{ p | selectattr('port_idx','eq',6) | map(attribute='ip') | first }}  <------remove this line after finding your appropriate port number
+          {% else %}
+            unknown
+          {% endif %}  
+
+  # Internet Status
+  - sensor:
+      - name: "Internet Status"
+        unique_id: internet_status_overall
+        state: >
+          {% set dns1 = states('sensor.208_67_222_222_round_trip_time_average') | float(default=2000) %}
+          {% set dns2 = states('sensor.9_9_9_9_round_trip_time_average') | float(default=2000) %}
+
+          {% set dns1_ok = dns1 < 150 %}
+          {% set dns2_ok = dns2 < 150 %}
+
+          {% if dns1_ok and dns2_ok %}
+            up
+          {% elif dns1_ok or dns2_ok %}
+            degraded
+          {% else %}
+            down
+          {% endif %}
+        icon: >
+          {% if is_state('sensor.internet_status', 'up') %}
+            mdi:web-check
+          {% elif is_state('sensor.internet_status', 'degraded') %}
+            mdi:alert
+          {% else %}
+            mdi:web-cancel
+          {% endif %}
+
+  # Latency         
+  - sensor:
+      - name: "Latency Status"
+        unique_id: latency_status_overall
+        state: >
+          {% set g = states('sensor.yourunifientity_google_wan_latency') | float(9999) %}
+          {% set m = states('sensor.yourunifientity_microsoft_wan_latency') | float(9999) %}
+          {% set c = states('sensor.yourunifientity_cloudflare_wan_latency') | float(9999) %}
+
+          {% set good_below = 40 %}
+          {% set bad_above = 80 %}
+
+          {% set bad = [g, m, c] | select('>=', bad_above) | list | count %}
+          {% set warn = [g, m, c] | select('>=', good_below) 
+                                  | select('<', bad_above) | list | count %}
+
+          {% if bad >= 2 %}
+            poor
+          {% elif bad == 1 or warn >= 1 %}
+            degraded
+          {% else %}
+            good
+          {% endif %}
+
+  # PoE Power Stats
+  - sensor:
+      # ───────────────────────────────────────────────
+      # HD-24 Total PoE Draw
+      # ───────────────────────────────────────────────
+      - name: "HD24 Total PoE"
+        unique_id: hd24_total_poe
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set ports = [
+            states('sensor.yourunifientity_port_9_poe_power'),
+            states('sensor.yourunifientity_port_10_poe_power'),
+            states('sensor.yourunifientity_port_22_poe_power'),
+            states('sensor.yourunifientity_port_12_poe_power'),
+            states('sensor.yourunifientity_port_15_poe_power'),
+            states('sensor.yourunifientity_port_13_poe_power'),
+            states('sensor.yourunifientity_port_11_poe_power'),
+            states('sensor.yourunifientity_port_18_poe_power'),
+            states('sensor.yourunifientity_port_5_poe_power'),
+            states('sensor.yourunifientity_port_4_poe_power'),
+            states('sensor.yourunifientity_port_3_poe_power'),
+          ] %}
+          {{ ports | map('float', 0) | sum | round(1) }}
+
+      # ───────────────────────────────────────────────
+      # 2.5G-8-PoE Total PoE Draw
+      # ───────────────────────────────────────────────
+      - name: "2.5G-8-PoE Total PoE"
+        unique_id: flex_2_5g_total_poe
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set ports = [
+            states('sensor.yourunifientity_port_8_poe_power'),
+            states('sensor.yourunifientity_port_4_poe_power'),
+            states('sensor.yourunifientity_port_1_poe_power'),
+          ] %}
+          {{ ports | map('float', 0) | sum | round(1) }}
+
+      # ───────────────────────────────────────────────
+      # Garage-8-PoE Total PoE Draw
+      # ───────────────────────────────────────────────
+      - name: "Garage 8-PoE Total PoE"
+        unique_id: garage_8_poe_total_poe
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set ports = [
+            states('sensor.yourunifientity_port_1_poe_power'),
+            states('sensor.yourunifientity_port_3_poe_power'),
+          ] %}
+          {{ ports | map('float', 0) | sum | round(1) }}
+
+      # ───────────────────────────────────────────────
+      # Combined Total PoE for All Switches
+      # ───────────────────────────────────────────────
+      - name: "Total PoE (All Switches)"
+        unique_id: total_poe_all_switches
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set totals = [
+            states('sensor.yourunifientity_total_poe'),
+            states('sensor.yourunifientity_total_poe'),
+            states('sensor.yourunifientity_total_poe'),
+          ] %}
+          {{ totals | map('float', 0) | sum | round(1) }}
